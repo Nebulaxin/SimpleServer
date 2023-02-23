@@ -1,5 +1,9 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Reflection;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace SimpleServer
@@ -9,11 +13,29 @@ namespace SimpleServer
         public HttpListener Listener { get; private set; }
 
         private bool running;
+        private Dictionary<string, ResponseBuilder> requests;
 
         public Server(string url)
         {
             Listener = new();
+            requests = new();
             Listener.Prefixes.Add(url);
+        }
+
+        public Server(JsonNode node) : this((string)node["url"])
+        {
+            foreach (var file in node["files"].AsArray())
+                requests.Add((string)file["request"], new FileResponseBuilder(file));
+            var methods = new Dictionary<string, Type>();
+            foreach (var type in Assembly.GetEntryAssembly().GetTypes())
+            {
+                if (!typeof(MethodResponse).IsAssignableFrom(type)) continue;
+                var attr = type.GetCustomAttribute<ServerMethodAttribute>();
+                if (attr == null) continue;
+                methods.Add(attr.Name, type);
+            }
+            foreach (var method in node["methods"].AsArray())
+                requests.Add((string)method["request"], new MethodResponseBuilder(method, methods));
         }
 
         /// <summary>
@@ -36,15 +58,24 @@ namespace SimpleServer
                 {
                     context = await Listener.GetContextAsync();
                 }
-                catch (HttpListenerException)
+                catch (HttpListenerException) // i havent come up with anything better
                 {
                     return;
                 }
                 if (!running) return;
                 var request = context.Request;
+                var reqPath = request.Url.AbsolutePath;
                 using var response = context.Response;
-                using var writer = new StreamWriter(response.OutputStream);
-                await writer.WriteAsync("<html><body><h1>This is default response</h1></body></html>");
+                if (!requests.TryGetValue(reqPath, out var builder))
+                {
+                    response.StatusCode = 404;
+                    continue;
+                }
+                await builder.InitAsync();
+                var builtResponse = builder.Build(request, response);
+                await builtResponse.InitAsync();
+                await builtResponse.ApplyAsync();
+                await builtResponse.CloseAsync();
             }
         }
 
