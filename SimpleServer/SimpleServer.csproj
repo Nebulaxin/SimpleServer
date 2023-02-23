@@ -2,5 +2,9 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net6.0</TargetFramework>
+    <PackageId>SimpleNebulaServer</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Nebulaxin</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 </Project>
