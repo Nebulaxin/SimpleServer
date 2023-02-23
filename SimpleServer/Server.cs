@@ -22,9 +22,9 @@ namespace SimpleServer
             Listener.Prefixes.Add(url);
         }
 
-        public Server(JsonNode node) : this((string)node["url"])
+        public Server(JsonNode config) : this((string)config["url"])
         {
-            foreach (var file in node["files"].AsArray())
+            foreach (var file in config["files"].AsArray())
                 requests.Add((string)file["request"], new FileResponseBuilder(file));
             var methods = new Dictionary<string, Type>();
             foreach (var type in Assembly.GetEntryAssembly().GetTypes())
@@ -34,7 +34,7 @@ namespace SimpleServer
                 if (attr == null) continue;
                 methods.Add(attr.Name, type);
             }
-            foreach (var method in node["methods"].AsArray())
+            foreach (var method in config["methods"].AsArray())
                 requests.Add((string)method["request"], new MethodResponseBuilder(method, methods));
         }
 
