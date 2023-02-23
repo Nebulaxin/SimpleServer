@@ -2,6 +2,8 @@
 
 This is simple single-thread server
 
+Nuget package: <https://www.nuget.org/packages/SimpleNebulaServer/1.0.0>
+
 ## How to use
 
 Create server with url or config as `JsonNode` from `System.Text.Json.Nodes`:
