@@ -8,27 +8,27 @@ using System.Threading.Tasks;
 
 namespace SimpleServer
 {
-    public abstract class ResponseBuilder
+    internal abstract class ResponseBuilder
     {
-        public ResponseBuilder(JsonNode options) { }
-
         public virtual Task InitAsync() => Task.CompletedTask;
-
-        public abstract Response Build(HttpListenerRequest req, HttpListenerResponse resp);
+        public abstract ServerResponse Build();
     }
 
-    public abstract class Response
+    public abstract class ServerResponse
     {
-        public HttpListenerResponse Resp { get; private set; }
+        public HttpListenerResponse Response { get; private set; }
+        public HttpListenerRequest Request { get; private set; }
 
-        public Response(HttpListenerRequest req, HttpListenerResponse resp)
+        public ServerResponse() { }
+
+        internal void InitReqResp(HttpListenerRequest req, HttpListenerResponse resp)
         {
-            Resp = resp;
+            Request = req;
+            Response = resp;
         }
 
-        public virtual Task InitAsync() => Task.CompletedTask;
-
-        public virtual Task ApplyAsync() => Task.CompletedTask;
-        public virtual Task CloseAsync() => Task.CompletedTask;
+        public virtual Task Init() => Task.CompletedTask;
+        public virtual Task Apply() => Task.CompletedTask;
+        internal virtual Task Close() => Task.CompletedTask;
     }
 }

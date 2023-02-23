@@ -9,42 +9,33 @@ using System.Threading.Tasks;
 
 namespace SimpleServer
 {
-    public class MethodResponseBuilder : ResponseBuilder
+    internal class MethodResponseBuilder<TResponse, TInput, TOutput> : ResponseBuilder
+        where TResponse : MethodResponse<TInput, TOutput>, new()
+        where TInput : ResponseInput, new()
+        where TOutput : ResponseOutput, new()
     {
-        private Type methodClass;
-        public MethodResponseBuilder(JsonNode options, Dictionary<string, Type> methods) : base(options)
+        public override ServerResponse Build()
         {
-            methodClass = methods[(string)options["method"]];
-        }
-
-        public override Response Build(HttpListenerRequest req, HttpListenerResponse resp)
-        {
-            return (Response)Activator.CreateInstance(methodClass, req, resp);
+            return new TResponse();
         }
     }
 
-    public class MethodResponse : Response
+    public class MethodResponse<TInput, TOutput> : ServerResponse where TInput : ResponseInput, new() where TOutput : ResponseOutput, new()
     {
-        public MethodResponse(HttpListenerRequest req, HttpListenerResponse resp) : base(req, resp)
-        {
-        }
-    }
+        public TInput Input { get; private set; } = new();
+        public TOutput Output { get; private set; } = new();
 
-    public class TextMethodResponse : MethodResponse
-    {
-        private StreamWriter writer;
-        public TextMethodResponse(HttpListenerRequest req, HttpListenerResponse resp) : base(req, resp)
+        public override Task Init()
         {
-            writer = new StreamWriter(resp.OutputStream);
+            Input.Init(Request);
+            Output.Init(Response);
+            return Task.CompletedTask;
         }
 
-        public async Task Write(object obj) => await writer.WriteAsync(obj.ToString());
-        public async Task WriteLine(object obj) => await writer.WriteLineAsync(obj.ToString());
-
-        public override async Task CloseAsync()
+        internal override Task Close()
         {
-            await writer.FlushAsync();
-            writer.Close();
+            Output.Write();
+            return Task.CompletedTask;
         }
     }
 }

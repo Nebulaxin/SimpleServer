@@ -26,16 +26,14 @@ namespace SimpleServer
         {
             foreach (var file in config["files"].AsArray())
                 requests.Add((string)file["request"], new FileResponseBuilder(file));
-            var methods = new Dictionary<string, Type>();
-            foreach (var type in Assembly.GetEntryAssembly().GetTypes())
-            {
-                if (!typeof(MethodResponse).IsAssignableFrom(type)) continue;
-                var attr = type.GetCustomAttribute<ServerMethodAttribute>();
-                if (attr == null) continue;
-                methods.Add(attr.Name, type);
-            }
-            foreach (var method in config["methods"].AsArray())
-                requests.Add((string)method["request"], new MethodResponseBuilder(method, methods));
+        }
+
+        public void AddResponse<TResponse, TInput, TOutput>(string request)
+            where TResponse : MethodResponse<TInput, TOutput>, new()
+            where TInput : ResponseInput, new()
+            where TOutput : ResponseOutput, new()
+        {
+            requests.Add(request, new MethodResponseBuilder<TResponse, TInput, TOutput>());
         }
 
         /// <summary>
@@ -51,6 +49,8 @@ namespace SimpleServer
 
         private async Task Listen()
         {
+            foreach (var builder in requests.Values)
+                await builder.InitAsync();
             while (running)
             {
                 HttpListenerContext context;
@@ -71,11 +71,11 @@ namespace SimpleServer
                     response.StatusCode = 404;
                     continue;
                 }
-                await builder.InitAsync();
-                var builtResponse = builder.Build(request, response);
-                await builtResponse.InitAsync();
-                await builtResponse.ApplyAsync();
-                await builtResponse.CloseAsync();
+                var builtResponse = builder.Build();
+                builtResponse.InitReqResp(request, response);
+                await builtResponse.Init();
+                await builtResponse.Apply();
+                await builtResponse.Close();
             }
         }
 
