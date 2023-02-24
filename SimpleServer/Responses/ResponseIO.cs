@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
@@ -13,6 +12,11 @@ namespace SimpleServer
     {
         internal ResponseInput() { }
         internal abstract Task Init(HttpListenerRequest request);
+    }
+
+    public class NullInput : ResponseInput
+    {
+        internal override Task Init(HttpListenerRequest _) => Task.CompletedTask;
     }
 
     public class PlainTextInput : ResponseInput
@@ -75,20 +79,24 @@ namespace SimpleServer
     #region Output
     public abstract class ResponseOutput
     {
-        internal ResponseOutput() { }
-        internal abstract Task Init(HttpListenerResponse response);
-        internal abstract Task Write();
+        internal virtual void Init(HttpListenerResponse response) { }
+
+        internal virtual Task Write() => Task.CompletedTask;
     }
+
+    public class NullOutput : ResponseOutput { }
 
     public class TextOutput : ResponseOutput
     {
+        private HttpListenerResponse response;
         private StreamWriter writer;
+        public string ContentType { get => response.ContentType; set => response.ContentType = value; }
 
-        internal override Task Init(HttpListenerResponse response)
+        internal override void Init(HttpListenerResponse response)
         {
+            this.response = response;
             writer = new(response.OutputStream) { AutoFlush = false };
-            response.ContentType = "text/plain";
-            return Task.CompletedTask;
+            ContentType = "text/plain";
         }
         internal override async Task Write() => await writer.FlushAsync();
 
@@ -102,11 +110,10 @@ namespace SimpleServer
         private Utf8JsonWriter writer;
         public JsonNode Node { get; private set; }
 
-        internal override Task Init(HttpListenerResponse response)
+        internal override void Init(HttpListenerResponse response)
         {
             writer = new(response.OutputStream);
             response.ContentType = "application/json";
-            return Task.CompletedTask;
         }
         internal override Task Write()
         {
@@ -120,11 +127,10 @@ namespace SimpleServer
         private Stream writer;
         public T Content { get; private set; }
 
-        internal override Task Init(HttpListenerResponse response)
+        internal override void Init(HttpListenerResponse response)
         {
             writer = response.OutputStream;
             response.ContentType = "application/json";
-            return Task.CompletedTask;
         }
         internal override async Task Write() => await JsonSerializer.SerializeAsync(writer, Content);
     }

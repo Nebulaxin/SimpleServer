@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
@@ -11,7 +7,7 @@ namespace SimpleServer
     internal class FileResponseBuilder : ResponseBuilder
     {
         private byte[] file;
-        private string filePath, contentType;
+        private readonly string filePath, contentType;
 
         public FileResponseBuilder(JsonNode options)
         {
@@ -19,7 +15,7 @@ namespace SimpleServer
             contentType = (string)options["contentType"];
         }
 
-        public override async Task InitAsync()
+        public override async Task Init()
         {
             file = await File.ReadAllBytesAsync(filePath);
         }
@@ -32,15 +28,15 @@ namespace SimpleServer
 
     internal class FileResponse : ServerResponse
     {
-        private byte[] file;
-        private string contentType;
+        private readonly byte[] file;
+        private readonly string contentType;
         public FileResponse(string contentType, byte[] file)
         {
             this.file = file;
             this.contentType = contentType;
         }
 
-        public override async Task Apply()
+        public override async Task Respond()
         {
             Response.ContentType = contentType;
             await Response.OutputStream.WriteAsync(file);

@@ -3,8 +3,15 @@
     <OutputType>Library</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <PackageId>SimpleNebulaServer</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.0.3</Version>
     <Authors>Nebulaxin</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Description>
+    This is simple single threaded server that can host files and response to HTTP requests
+
+    Source: https://github.com/Nebulaxin/SimpleServer
+    </Description>
+    <RepositoryUrl>https://github.com/Nebulaxin/SimpleServer</RepositoryUrl>
+    <PackageReleaseNotes>Changed namespaces</PackageReleaseNotes>
   </PropertyGroup>
 </Project>

@@ -1,18 +1,55 @@
 # SimpleServer
 
-This is simple single-thread server
+This is simple single threaded server that can host files and response to HTTP requests
 
-Nuget package: <https://www.nuget.org/packages/SimpleNebulaServer/1.0.0>
+[**Nuget package**](https://www.nuget.org/packages/SimpleNebulaServer)
 
-## How to use
+---
 
-Create server with url or config as `JsonNode` from `System.Text.Json.Nodes`:
+## Usage
+
++ Create server with config as path to it:
 
 ```cs
-var server = new Server("http://127.0.0.1:8080/");
-// or
-var server = new Server(JsonNode.Parse(File.ReadAllTextAsync("config.json")));
+var server = new Server("config.json");
 ```
+
++ Create `config.json` with url
+
+```json
+{
+    "url": "http://127.0.0.1:8080/"
+}
+```
+
++ Add response:
+
+```cs
+class DefaultResponse : MethodResponse<NullInput, TextOutput>
+{
+    public override async Task Respond()
+    {
+        Output.ContentType = "text/html";
+        await Output.WriteLineAsync("<!DOCTYPE html><html><body><h1>This is default response.</h1></body></html>");
+    }
+}
+```
+
++ Add response to server:
+
+```cs
+server.AddResponse<DefaultResponse, NullInput, NullOutput>("/default");
+```
+
++ Start server:
+
+```cs
+server.Start();
+// Wait for request to stop server, for example Console.ReadLine()
+server.Stop();
+```
+
+---
 
 ## Example
 
@@ -20,34 +57,24 @@ Code:
 
 ```cs
 using System;
-using System.IO;
-using System.Net;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using SimpleServer;
 
-var config = JsonNode.Parse(await File.ReadAllTextAsync("config.json"));
-var server = new Server(config);
+var server = new Server("config.json");
+
+server.AddResponse<GetInfoResponse, QueryInput, TextOutput>("/getInfo");
 
 server.Start();
 Console.ReadLine();
 server.Stop();
 
-[ServerMethod("GetInfo")]
-class GetInfoResponse : TextMethodResponse
+class GetInfoResponse : MethodResponse<QueryInput, TextOutput>
 {
-    private string name;
-    public GetInfoResponse(HttpListenerRequest req, HttpListenerResponse resp) 
-        : base(req, resp)
+    public override async Task Respond()
     {
-        name = req.QueryString["name"];
-    }
-
-    public override async Task ApplyAsync()
-    {
-        Resp.ContentType = "text/plain";
-        await WriteLine($"hello, {name}. about this server:");
-        await WriteLine("this is cool server");
+        await Output.WriteLineAsync($"hello, {Input.Query["name"]}");
+        await Output.WriteLineAsync("about this server:");
+        await Output.WriteLineAsync("this is cool server");
     }
 }
 ```
@@ -67,12 +94,6 @@ Config:
             "request": "/",
             "contentType": "text/html",
             "file": "index.html"
-        }
-    ],
-    "methods": [
-        {
-            "request": "/getInfo",
-            "method": "GetInfo"
         }
     ]
 }

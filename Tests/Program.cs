@@ -1,13 +1,11 @@
 using System;
-using System.IO;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using SimpleServer;
 
-var config = JsonNode.Parse(await File.ReadAllTextAsync("config.json"));
-var server = new Server(config);
+var server = new Server("config.json");
 
 server.AddResponse<GetInfoResponse, QueryInput, TextOutput>("/getInfo");
+server.AddResponse<DefaultResponse, NullInput, TextOutput>("/");
 
 bool running = true;
 Console.CancelKeyPress += (o, e) => running = !(e.Cancel = true);
@@ -18,17 +16,19 @@ server.Stop();
 
 class GetInfoResponse : MethodResponse<QueryInput, TextOutput>
 {
-    private string name;
-    public override Task Init()
+    public override async Task Respond()
     {
-        name = Input.Query["name"];
-        return base.Init();
-    }
-
-    public override async Task Apply()
-    {
-        await Output.WriteLineAsync($"hello, {name}");
+        await Output.WriteLineAsync($"hello, {Input.Query["name"]}");
         await Output.WriteLineAsync("about this server:");
         await Output.WriteLineAsync("this is cool server");
+    }
+}
+
+class DefaultResponse : MethodResponse<NullInput, TextOutput>
+{
+    public override async Task Respond()
+    {
+        Output.ContentType = "text/html";
+        await Output.WriteLineAsync("<!DOCTYPE html><html><body><h1>This is default response.</h1></body></html>");
     }
 }

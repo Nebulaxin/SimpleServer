@@ -15,7 +15,8 @@
             "cwd": "${workspaceFolder}/Tests/bin/Debug/net6.0/",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "integratedTerminal",
-            "stopAtEntry": false
+            "internalConsoleOptions": "neverOpen",
+            "stopAtEntry": true
         },
         {
             "name": ".NET Core Attach",
