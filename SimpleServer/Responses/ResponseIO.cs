@@ -108,7 +108,7 @@ namespace SimpleServer
     public class JsonOutput : ResponseOutput
     {
         private Utf8JsonWriter writer;
-        public JsonNode Node { get; private set; }
+        public JsonNode Node { get; set; }
 
         internal override void Init(HttpListenerResponse response)
         {
@@ -125,7 +125,7 @@ namespace SimpleServer
     public class SerializedOutput<T> : ResponseOutput
     {
         private Stream writer;
-        public T Content { get; private set; }
+        public T Content { get; set; }
 
         internal override void Init(HttpListenerResponse response)
         {
