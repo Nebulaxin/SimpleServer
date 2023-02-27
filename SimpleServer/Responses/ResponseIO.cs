@@ -32,13 +32,16 @@ namespace SimpleServer
 
     public class JsonInput : ResponseInput
     {
-        public JsonNode Node { get; private set; }
+        public JsonNode Json { get; private set; }
+        public JsonNode this[string property] => Json[property];
 
         internal override async Task Init(HttpListenerRequest request)
         {
             using var reader = new StreamReader(request.InputStream);
-            Node = JsonNode.Parse(await reader.ReadToEndAsync());
+            Json = JsonNode.Parse(await reader.ReadToEndAsync());
         }
+
+        public static implicit operator JsonNode(JsonInput input) => input.Json;
     }
 
     public class SerializedInput<T> : ResponseInput
@@ -107,18 +110,20 @@ namespace SimpleServer
 
     public class JsonOutput : ResponseOutput
     {
-        private Utf8JsonWriter writer;
-        public JsonNode Node { get; set; }
+        private StreamWriter writer;
+        public JsonObject Json { get; set; } = new();
+        public JsonNode this[string property] { get => Json[property]; set => Json[property] = value; }
 
         internal override void Init(HttpListenerResponse response)
         {
-            writer = new(response.OutputStream);
+            writer = new(response.OutputStream) { AutoFlush = false };
             response.ContentType = "application/json";
         }
-        internal override Task Write()
+
+        internal override async Task Write()
         {
-            Node.WriteTo(writer);
-            return Task.CompletedTask;
+            await writer.WriteAsync(Json.ToJsonString());
+            await writer.FlushAsync();
         }
     }
 
