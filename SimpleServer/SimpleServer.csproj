@@ -3,7 +3,7 @@
     <OutputType>Library</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <PackageId>SimpleNebulaServer</PackageId>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <Authors>Nebulaxin</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>
@@ -12,6 +12,6 @@
     Source: https://github.com/Nebulaxin/SimpleServer
     </Description>
     <RepositoryUrl>https://github.com/Nebulaxin/SimpleServer</RepositoryUrl>
-    <PackageReleaseNotes>Fixed Json output</PackageReleaseNotes>
+    <PackageReleaseNotes>Changed Json IO</PackageReleaseNotes>
   </PropertyGroup>
 </Project>
