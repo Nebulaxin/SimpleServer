@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -11,8 +12,11 @@ namespace SimpleServer
 
         public FileResponseBuilder(JsonNode options)
         {
-            filePath = (string)options["file"];
-            contentType = (string)options["contentType"];
+            ArgumentNullException.ThrowIfNull(options, nameof(options));
+            filePath = (string)(options["file"] ?? options["request"]);
+            contentType = (string)options["contentType"] ?? "text/plain";
+            if (filePath is null) throw new ArgumentException("No file path or request was specified");
+            if (!File.Exists(filePath)) throw new ArgumentException($"File '{filePath}' doesn't exist");
         }
 
         public override async Task Init()

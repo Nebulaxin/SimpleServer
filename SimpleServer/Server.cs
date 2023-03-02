@@ -66,10 +66,9 @@ namespace SimpleServer
                 context = await Listener.GetContextAsync();
             }
             // i havent come up with anything better
-            catch (HttpListenerException)
-            {
-                return;
-            }
+            catch (HttpListenerException) { return; }
+            catch (ObjectDisposedException) { return; }
+
             if (!Running) return;
             var request = context.Request;
             var reqPath = request.Url.AbsolutePath;
@@ -79,10 +78,17 @@ namespace SimpleServer
                 response.StatusCode = 404;
                 return;
             }
-            var builtResponse = builder.Build();
-            await builtResponse.Init(request, response);
-            await builtResponse.Respond();
-            await builtResponse.Close();
+            try
+            {
+                var builtResponse = builder.Build();
+                await builtResponse.Init(request, response);
+                await builtResponse.Respond();
+                await builtResponse.Close();
+            }
+            catch
+            {
+                response.StatusCode = 500;
+            }
         }
 
         /// <summary>
