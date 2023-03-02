@@ -44,9 +44,14 @@ server.AddResponse<DefaultResponse, NullInput, NullOutput>("/default");
 + Start server:
 
 ```cs
-server.Start();
-// Wait for request to stop server, for example Console.ReadLine()
-server.Stop();
+// Any condidion for stopping server
+Console.CancelKeyPress += (o, e) =>
+{
+    e.Cancel = true;
+    server.Stop();
+};
+
+await server.Listen();
 ```
 
 ---
@@ -64,9 +69,13 @@ var server = new Server("config.json");
 
 server.AddResponse<GetInfoResponse, QueryInput, TextOutput>("/getInfo");
 
-server.Start();
-Console.ReadLine();
-server.Stop();
+Console.CancelKeyPress += (o, e) =>
+{
+    e.Cancel = true;
+    server.Stop();
+};
+
+await server.Listen();
 
 class GetInfoResponse : MethodResponse<QueryInput, TextOutput>
 {

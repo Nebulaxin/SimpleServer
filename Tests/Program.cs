@@ -17,7 +17,7 @@ Console.CancelKeyPress += (o, e) =>
     server.Stop();
 };
 
-await server.StartAndWait();
+await server.Listen();
 
 class GetInfoResponse : MethodResponse<QueryInput, TextOutput>
 {
