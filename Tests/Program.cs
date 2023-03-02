@@ -11,12 +11,13 @@ server.AddResponse<DefaultResponse, NullInput, TextOutput>("/");
 server.AddResponse<JsonTest, JsonInput, JsonOutput>("/json");
 server.AddResponse<SerializedTest, SerializedInput<int[]>, SerializedOutput<int[]>>("/serialized");
 
-bool running = true;
-Console.CancelKeyPress += (o, e) => running = !(e.Cancel = true);
+Console.CancelKeyPress += (o, e) =>
+{
+    e.Cancel = true;
+    server.Stop();
+};
 
-server.Start();
-while (running) Console.ReadKey(true);
-server.Stop();
+await server.StartAndWait();
 
 class GetInfoResponse : MethodResponse<QueryInput, TextOutput>
 {
@@ -34,6 +35,7 @@ class DefaultResponse : MethodResponse<NullInput, TextOutput>
     {
         Output.ContentType = "text/html";
         await Output.WriteLineAsync("<!DOCTYPE html><html><body><h1>This is default response.</h1></body></html>");
+        throw null;
     }
 }
 

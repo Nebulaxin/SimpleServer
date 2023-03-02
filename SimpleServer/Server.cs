@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -9,8 +10,8 @@ namespace SimpleServer
     public class Server
     {
         public HttpListener Listener { get; private set; }
+        public bool Running { get; private set; }
 
-        private bool running;
         private readonly Dictionary<string, ResponseBuilder> requests;
 
         public Server(string configPath)
@@ -41,46 +42,47 @@ namespace SimpleServer
         }
 
         /// <summary>
-        /// Starts recieving requests
+        /// Starts recieving requests and waits until server is stopped
         /// </summary>
-        public void Start()
+        public async Task Listen()
         {
-            if (running) return;
-            running = true;
+            if (Running) return;
+            Running = true;
             Listener.Start();
-            Task.Factory.StartNew(Listen, TaskCreationOptions.LongRunning);
-        }
 
-        private async Task Listen()
-        {
             foreach (var builder in requests.Values)
                 await builder.Init();
-            while (running)
+            while (Running)
             {
-                HttpListenerContext context;
-                try
-                {
-                    context = await Listener.GetContextAsync();
-                }
-                // i havent come up with anything better
-                catch (HttpListenerException)
-                {
-                    return;
-                }
-                if (!running) return;
-                var request = context.Request;
-                var reqPath = request.Url.AbsolutePath;
-                using var response = context.Response;
-                if (!requests.TryGetValue(reqPath, out var builder))
-                {
-                    response.StatusCode = 404;
-                    continue;
-                }
-                var builtResponse = builder.Build();
-                await builtResponse.Init(request, response);
-                await builtResponse.Respond();
-                await builtResponse.Close();
+                await ListenForSingleRequest();
             }
+        }
+
+        private async Task ListenForSingleRequest()
+        {
+            HttpListenerContext context;
+            try
+            {
+                context = await Listener.GetContextAsync();
+            }
+            // i havent come up with anything better
+            catch (HttpListenerException)
+            {
+                return;
+            }
+            if (!Running) return;
+            var request = context.Request;
+            var reqPath = request.Url.AbsolutePath;
+            using var response = context.Response;
+            if (!requests.TryGetValue(reqPath, out var builder))
+            {
+                response.StatusCode = 404;
+                return;
+            }
+            var builtResponse = builder.Build();
+            await builtResponse.Init(request, response);
+            await builtResponse.Respond();
+            await builtResponse.Close();
         }
 
         /// <summary>
@@ -88,8 +90,8 @@ namespace SimpleServer
         /// </summary>
         public void Stop()
         {
-            if (!running) return;
-            running = false;
+            if (!Running) return;
+            Running = false;
             Listener.Stop();
         }
     }
