@@ -85,10 +85,10 @@ namespace SimpleServer
                 await builtResponse.Respond();
                 await builtResponse.Close();
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e);
                 response.StatusCode = 500;
-                throw;
             }
         }
 

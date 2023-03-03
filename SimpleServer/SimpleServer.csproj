@@ -12,6 +12,6 @@
     Source: https://github.com/Nebulaxin/SimpleServer
     </Description>
     <RepositoryUrl>https://github.com/Nebulaxin/SimpleServer</RepositoryUrl>
-    <PackageReleaseNotes>Added throw try/catch handlings</PackageReleaseNotes>
+    <PackageReleaseNotes>Removed throw try/catch handlings</PackageReleaseNotes>
   </PropertyGroup>
 </Project>
