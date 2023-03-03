@@ -88,6 +88,7 @@ namespace SimpleServer
             catch
             {
                 response.StatusCode = 500;
+                throw;
             }
         }
 
